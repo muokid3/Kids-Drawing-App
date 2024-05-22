@@ -4,9 +4,12 @@ import android.Manifest
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.Intent.ACTION_SEND
+import android.content.Intent.EXTRA_STREAM
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.MediaScannerConnection
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -213,6 +216,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this@MainActivity,
                             "File has been stored at: $result",
                             Toast.LENGTH_SHORT).show()
+                        shareImage(result)
                     }else{
                         Toast.makeText(
                             this@MainActivity,
@@ -228,6 +232,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         return result
+    }
+
+    private fun shareImage(result: String){
+        MediaScannerConnection.scanFile(this, arrayOf(result),null){
+            path, uri ->
+            val shareIntent = Intent()
+            shareIntent.action = ACTION_SEND
+            shareIntent.putExtra(EXTRA_STREAM, uri)
+            shareIntent.type = "image/png"
+            startActivity(Intent.createChooser(shareIntent, "Share"))
+        }
     }
     private fun showRationaleDialog(title: String, message:String){
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)

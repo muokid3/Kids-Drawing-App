@@ -23,8 +23,7 @@
             android:id="@+id/iv_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/image"/>
+            android:scaleType="centerCrop" />
 
         <com.dm.berxley.kidsdrawingapp.DrawingView
             android:id="@+id/drawing_view"
