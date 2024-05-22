@@ -4,11 +4,15 @@ import android.Manifest
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -16,9 +20,15 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var ibGallery: ImageButton? = null
     private var ibUndo: ImageButton? = null
     private var ibBrush: ImageButton? = null
+    private var ibSave: ImageButton? = null
 
     private val openGalleryLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -91,6 +102,14 @@ class MainActivity : AppCompatActivity() {
         ibUndo = findViewById(R.id.ib_undo)
         ibUndo?.setOnClickListener {
             drawing_view?.undo()
+        }
+
+        ibSave = findViewById(R.id.ib_save)
+        ibSave?.setOnClickListener {
+            lifecycleScope.launch {
+                val flDrawingView: FrameLayout = findViewById(R.id.fl_drawing_view_container)
+                saveBitmapFile(getBitmapFromView(flDrawingView))
+            }
         }
     }
 
@@ -159,6 +178,57 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun getBitmapFromView(view: View): Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(returnedBitmap)
+        val bgDrawable = view.background
+
+        if (bgDrawable!=null){
+            bgDrawable.draw(canvas)
+        }else{
+            canvas.drawColor(Color.WHITE)
+        }
+        view.draw(canvas)
+        return returnedBitmap;
+    }
+
+    private suspend fun saveBitmapFile(mBitmap: Bitmap) : String {
+        var result = ""
+
+        withContext(Dispatchers.IO) {
+            try {
+                val bytes = ByteArrayOutputStream()
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 90, bytes)
+                val file = File(externalCacheDir?.absoluteFile.toString() +
+                        File.pathSeparator + "KidsDrawingApp_" + System.currentTimeMillis()/1000 + ".png"
+                )
+                val fo = FileOutputStream(file)
+                fo.write(bytes.toByteArray())
+                fo.close()
+
+                result = file.absolutePath
+
+                runOnUiThread {
+                    if (result.isNotEmpty()){
+                        Toast.makeText(this@MainActivity,
+                            "File has been stored at: $result",
+                            Toast.LENGTH_SHORT).show()
+                    }else{
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Something went wrong",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }catch (ex: Exception){
+                result = ""
+                ex.printStackTrace()
+            }
+        }
+
+        return result
+    }
     private fun showRationaleDialog(title: String, message:String){
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder.setTitle(title)
