@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
 
     private var drawing_view:DrawingView? = null
     private var mImageButtonCurrentpaint: ImageButton? = null
+    private var ibGallery: ImageButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +33,11 @@ class MainActivity : AppCompatActivity() {
 
         ib_brush.setOnClickListener {
             showBrushSizeChooserDialog()
+        }
+
+        ibGallery = findViewById(R.id.ib_gallery)
+        ibGallery?.setOnClickListener {
+
         }
     }
 
