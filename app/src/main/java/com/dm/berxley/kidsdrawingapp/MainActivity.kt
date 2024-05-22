@@ -1,11 +1,19 @@
 package com.dm.berxley.kidsdrawingapp
 
+import android.Manifest
 import android.app.Dialog
+import android.content.DialogInterface
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 
@@ -14,6 +22,26 @@ class MainActivity : AppCompatActivity() {
     private var drawing_view:DrawingView? = null
     private var mImageButtonCurrentpaint: ImageButton? = null
     private var ibGallery: ImageButton? = null
+
+    private val requestPermission: ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){
+        permissions -> permissions.entries.forEach {
+            val permissionName = it.key
+            val isGranted = it.value
+
+            if (isGranted){
+                Toast.makeText(this, "$permissionName Permission granted", Toast.LENGTH_SHORT).show()
+            }else{
+                if (permissionName == Manifest.permission.READ_MEDIA_IMAGES){
+                    Toast.makeText(this, "$permissionName Denied", Toast.LENGTH_SHORT).show()
+                }
+
+                if (permissionName == Manifest.permission.READ_EXTERNAL_STORAGE){
+                    Toast.makeText(this, "$permissionName Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +65,24 @@ class MainActivity : AppCompatActivity() {
 
         ibGallery = findViewById(R.id.ib_gallery)
         ibGallery?.setOnClickListener {
+            requestStoragePermission()
+        }
+    }
 
+    private fun requestStoragePermission() {
+//        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
+//            showRationaleDialog("Kids Drawing App", "Kids drawing app needs to access your external storage")
+//        }else{
+//
+//        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermission.launch(arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES
+            ))
+        }else{
+            requestPermission.launch(arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ))
         }
     }
 
@@ -79,5 +124,15 @@ class MainActivity : AppCompatActivity() {
             mImageButtonCurrentpaint = view
         }
 
+    }
+
+    private fun showRationaleDialog(title: String, message:String){
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+        builder.setTitle(title)
+        builder.setMessage(message)
+        builder.setPositiveButton("Cancel", DialogInterface.OnClickListener { dialogInterface, _ -> {
+            dialogInterface.dismiss()
+        } })
+        builder.create().show()
     }
 }
