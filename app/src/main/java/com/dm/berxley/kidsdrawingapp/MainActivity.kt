@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private var drawing_view:DrawingView? = null
     private var mImageButtonCurrentpaint: ImageButton? = null
     private var ibGallery: ImageButton? = null
+    private var ibUndo: ImageButton? = null
+    private var ibBrush: ImageButton? = null
 
     private val openGalleryLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -76,15 +78,19 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
         )
 
-        val ib_brush: ImageButton = findViewById(R.id.ib_brush)
-
-        ib_brush.setOnClickListener {
+        ibBrush = findViewById(R.id.ib_brush)
+        ibBrush?.setOnClickListener {
             showBrushSizeChooserDialog()
         }
 
         ibGallery = findViewById(R.id.ib_gallery)
         ibGallery?.setOnClickListener {
             requestStoragePermission()
+        }
+
+        ibUndo = findViewById(R.id.ib_undo)
+        ibUndo?.setOnClickListener {
+            drawing_view?.undo()
         }
     }
 
